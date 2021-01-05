@@ -8,7 +8,7 @@ export interface A3sAutoconfigDto {
 export interface A3sRepositoryProtocolDto {
     connectionTimeOut: string
     encryptionMode?: A3sEncryptionMode
-    protocolType?: A3sProtocolType
+    protocolType: A3sProtocolType
     login: string
     password: string
     port: string
@@ -39,19 +39,33 @@ export interface A3sEncryptionMode {
 }
 
 export enum A3sProtocol {
-    FTP,
-    HTTP,
-    HTTPS,
-    A3S,
-    FTP_BITTORRENT,
-    HTTP_BITTORRENT,
-    HTTPS_BITTORRENT,
-    SOCKS4,
-    SOCKS5
+    FTP = 'FTP',
+    HTTP = 'HTTP',
+    HTTPS = 'HTTPS',
+    A3S = 'A3S',
+    FTP_BITTORRENT = 'FTP_BITTORRENT',
+    HTTP_BITTORRENT = 'HTTP_BITTORRENT',
+    HTTPS_BITTORRENT = 'HTTPS_BITTORRENT',
+    SOCKS4 = 'SOCKS4',
+    SOCKS5 = 'SOCKS5'
 }
 
 export enum A3sEncryption {
     NO_ENCRYPTION,
     EXPLICIT_SSL,
     IMPLICIT_SSL
+}
+
+export const A3sProtocolTypeHTTP: A3sProtocolType = {
+    defaultPort: '80',
+    description: 'HTTP',
+    prompt: 'http://',
+    protocol: A3sProtocol.HTTP
+}
+
+export const A3sProtocolTypeHTTPS: A3sProtocolType = {
+    defaultPort: '443',
+    description: 'HTTPS',
+    prompt: 'https://',
+    protocol: A3sProtocol.HTTPS
 }

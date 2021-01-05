@@ -10,11 +10,6 @@ import {SyncTreeLeaf} from '../model/SyncTreeLeaf';
 import {SyncComparisonService} from './sync/SyncComparisonService';
 import {Changelogs} from '../model/Changelogs';
 
-util.setModuleDefaults("arma3sync-lib", {
-    repoPath: '/var/lib/repo',
-    publicURL: 'http://foo'
-});
-
 const oldServerInfo: A3sServerInfoDto = {
     revision: 1,
     buildDate: new Date('1970-01-01'),
@@ -30,6 +25,10 @@ const oldServerInfo: A3sServerInfoDto = {
 describe(RepoBuildService.name, () => {
 
     beforeEach(() => {
+        util.setModuleDefaults("arma3sync-lib", {
+            repoPath: '/var/lib/repo',
+            publicURL: 'http://foo'
+        });
         jest.clearAllMocks();
     });
 
@@ -149,5 +148,50 @@ describe(RepoBuildService.name, () => {
 
             done();
         });
+
+        it('supports HTTPS', async (done) => {
+            util.setModuleDefaults("arma3sync-lib", {
+                repoPath: '/var/lib/repo',
+                publicURL: 'https://foo'
+            });
+
+            const a3sDirectory = {
+                setRawSync: jest.fn(() => Promise.resolve()),
+                getServerInfo: jest.fn(() => Promise.resolve(oldServerInfo)),
+                setServerInfo: jest.fn(() => Promise.resolve()),
+                setAutoconfig: jest.fn(() => Promise.resolve()),
+                setEvents: jest.fn(() => Promise.resolve()),
+                setChangelogs: jest.fn(() => Promise.resolve()),
+            };
+            const zsyncGenerationService = {};
+            const syncGenerationService = {};
+            const syncComparisonService = new SyncComparisonService();
+
+            const repoBuildService = new RepoBuildService(a3sDirectory as unknown as A3sDirectory,
+                syncGenerationService as unknown as SyncGenerationService,
+                zsyncGenerationService as unknown as ZSyncGenerationService,
+                syncComparisonService as SyncComparisonService,
+            );
+            await repoBuildService.initializeRepository();
+
+            expect(a3sDirectory.setServerInfo.mock.calls).toHaveLength(1);
+            expect(a3sDirectory.setRawSync.mock.calls).toHaveLength(1);
+            expect(a3sDirectory.setAutoconfig.mock.calls).toHaveLength(1);
+            expect(a3sDirectory.setEvents.mock.calls).toHaveLength(1);
+            expect(a3sDirectory.setChangelogs.mock.calls).toHaveLength(1);
+            expect(a3sDirectory.setChangelogs.mock.calls[0]).toHaveLength(1);
+            // @ts-ignore
+            const initialChangelogs = a3sDirectory.setChangelogs.mock.calls[0][0] as A3sChangelogsDto;
+            expect(initialChangelogs.list[0].revision).toBe(0);
+            expect(initialChangelogs.list[0].addons).toHaveLength(0);
+
+            // @ts-ignore
+            const serverInfo = a3sDirectory.setServerInfo.mock.calls[0][0] as A3sServerInfoDto;
+            expect(serverInfo.numberOfConnections).toBe(1);
+            expect(serverInfo.totalFilesSize).toBe(0);
+            expect(serverInfo.numberOfFiles).toBe(0);
+
+            done();
+        })
     });
 });
